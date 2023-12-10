@@ -1,0 +1,129 @@
+ 
+ 
+from flask import jsonify, request
+from modelo.coneccion import db_connection
+
+
+def buscar_estudiante(codigo):
+    try:
+        conn = db_connection()
+        cur = conn.cursor()
+        cur.execute("""select cedula_identidad,nombre,apellido,procedencia,
+        to_char(fecha_nacimiento,'YYYY-MM-DD') as fecha_nacimiento FROM estudiantes WHERE cedula_identidad = %s""", (codigo,))
+        datos = cur.fetchone()
+        conn.close()
+        if datos != None:
+            usuario = {'cedula_identidad': datos[0], 'nombre': datos[1],
+                       'apellido': datos[2], 'procedencia': datos[3],
+                       'fecha_nacimiento': datos[4]}
+            return estudiante
+        else:
+            return None
+    except Exception as ex:
+            raise ex
+
+class EstudianteModel():
+    @classmethod
+    def listar_estudiantes(self):
+        try:
+            conn = db_connection()
+            cur = conn.cursor()
+            cur.execute("""select cedula_identidad,nombre,apellido,procedencia,
+             to_char(fecha_nacimiento,'YYYY-MM-DD') as fecha_nacimiento from estudiantes""")
+            datos = cur.fetchall()
+            estudiantes = []
+            for fila in datos:
+                estudiantes = {'cedula_identidad': fila[0],
+                       'nombre': fila[1],
+                       'primer_apellido': fila[2],
+                       'segundo_apellido': fila[3],
+                       'fecha_nacimiento': fila[4]}
+                estudiantes.append(estudiante)
+            conn.close()
+            return jsonify({'estudiantes': estudiantes, 'mensaje': "Estudiante listados.", 'exito': True})
+        except Exception as ex:
+            return jsonify({'mensaje': "Errorr", 'exito': False})
+
+    @classmethod
+    def lista_usuario(self,codigo):
+        try:
+            usuario = buscar_estudiante(codigo)
+            if estudiante != None:
+                return jsonify({'usuarios': usuario, 'mensaje': "estudiante encontrado.", 'exito': True})
+            else:
+                return jsonify({'mensaje': "Estudiante no encontrado.", 'exito': False})
+        except Exception as ex:
+            return jsonify({'mensaje': "Error", 'exito': False})
+        
+    @classmethod
+    def registrar_estudiante(self):
+        try:
+            estudiante = buscar_estudiante(request.json['cedula_identidad'])
+            if estudiante != None:
+                return jsonify({'mensaje': "Cedula de identidad  ya existe, no se puede duplicar.", 'exito': False})
+            else:
+                conn = db_connection()
+                cur = conn.cursor()
+                cur.execute('INSERT INTO estudiantes values(%s,%s,%s,%s,%s)', (request.json['cedula_identidad'], request.json['nombre'], request.json['apellido'],
+                                                                            request.json['procedencia'], request.json['fecha_nacimiento']))
+                conn.commit()
+                conn.close()
+                return jsonify({'mensaje': "Estudiante registrado.", 'exito': True})
+        except Exception as ex:
+            return jsonify({'mensaje': "Error", 'exito': False})
+
+    @classmethod
+    def eliminar_estudiante(self,codigo):
+        try:
+            estudiante = buscar_estudiante(codigo)
+            if estudiante != None:
+                conn = db_connection()
+                cur = conn.cursor()
+                cur.execute("DELETE FROM estudiantes WHERE cedula_identidad = %s", (codigo,))
+                conn.commit()
+                conn.close()
+                return jsonify({'mensaje': "Estudiante eliminado.", 'exito': True})
+            else:
+                return jsonify({'mensaje': "Estudiante no encontrado.", 'exito': False})
+        except Exception as ex:
+            return jsonify({'mensaje': "Error", 'exito': False})
+
+    @classmethod
+    def actualizar_usuario(self,codigo):
+        try:
+            estudiante = buscar_estudiante(codigo)
+            if estudiante != None:
+                conn = db_connection()
+                cur = conn.cursor()
+                cur.execute("""UPDATE estudiantes SET nombre=%s, apellido=%s, procedencia=%s,
+                fecha_nacimiento=%s WHERE cedula_identidad=%s""",
+                        (request.json['nombre'], request.json['apellido'], request.json['procedencia'], request.json['fecha_nacimiento'], codigo))
+                conn.commit()
+                conn.close()
+                return jsonify({'mensaje': "Estudiante actualizado.", 'exito': True})
+            else:
+                return jsonify({'mensaje': "Estudiante no encontrado.", 'exito': False})
+        except Exception as ex:
+                return jsonify({'mensaje': "Error", 'exito': False})
+
+    @classmethod
+    def promedio_edad(self):
+        try:
+            conn = db_connection()
+            cur = conn.cursor()
+            cur.execute("""select avg(extract(year from age(now(),fecha_nacimiento))) 
+            as promedio_edades from estudiante""")
+            datos = cur.fetchone()
+            conn.close()
+            if datos != None:
+                return jsonify({'promedioEdad': datos[0], 'exito': True})
+            else:
+                return jsonify({'mensaje': "No existe promedio.", 'exito': False})
+        except Exception as ex:
+            return jsonify({'mensaje': "Error", 'exito': False})
+
+    @classmethod
+    def estado(self):
+        return jsonify({"nameSystem": "api-users", "version": "0.0.1", 
+                        "developer": "Mayte Villanueva", "email":"@hotmail.com",
+                        'exito': True})
