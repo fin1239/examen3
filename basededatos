@@ -1,0 +1,11 @@
+create table estudiante(
+Ci int primary key,
+nombre varchar(50),
+apellido varchar(30),p
+rocedencia varchar(20),
+fechaNac date);
+
+
+insert into estudiante values ('12345','Marcus', 'Lopez', 'Potosi', '2002-06-27'),
+('13784','Luis', 'Gutierez', 'La Paz', '2000-06-12'),
+('19734','Lucas', 'Perrez', 'Beni', '2005-02-06');
